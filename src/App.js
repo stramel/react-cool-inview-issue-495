@@ -1,25 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
+import "./index.css";
+import { v4 as uuidv4 } from "uuid";
+import useInView from "react-cool-inview";
+import { useState } from "react";
 
-function App() {
+function createItems() {
+  return Array.from({ length: 20 }).map((_, i) => {
+    return {
+      id: uuidv4(),
+      num: ++count,
+    };
+  });
+}
+
+let count = -20;
+
+export default function App() {
+  const [items, setItems] = useState(createItems);
+  const { observe, inView, scrollDirection } = useInView({
+    rootMargin: "0px 0px 200px 0px",
+    async onEnter({ observe, unobserve }) {
+      console.log("unobserve");
+      unobserve();
+
+      await new Promise((res) => {
+        // Simulating data coming in from API
+        setTimeout(() => {
+          console.log("setItems");
+          setItems([...items, ...createItems()]);
+          res();
+        }, 200);
+      });
+
+      console.log("observe");
+      observe();
+    },
+  });
+
+  console.log(inView, scrollDirection);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {items.map((item, i) => {
+        return (
+          <pre ref={i === items.length - 1 ? observe : null} key={item.id}>
+            {JSON.stringify(item, undefined, 2)}
+          </pre>
+        );
+      })}
     </div>
   );
 }
-
-export default App;
